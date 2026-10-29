@@ -6,7 +6,7 @@ import app as insurance_app
 app = insurance_app.app
 
 
-class TestInsuranceApp(unittest.TestCase):
+class TestInsuranceAppV1(unittest.TestCase):
 
     def setUp(self):
 
@@ -15,18 +15,6 @@ class TestInsuranceApp(unittest.TestCase):
         insurance_app.claims.clear()
 
         insurance_app.next_claim_id = 1
-
-    def add_sample_claim(self):
-
-        return self.client.post(
-            "/add",
-            data={
-                "claimant": "Chetna",
-                "policy_number": "POL123",
-                "amount": "5000",
-                "description": "Vehicle damage"
-            }
-        )
 
     def test_homepage(self):
 
@@ -38,7 +26,7 @@ class TestInsuranceApp(unittest.TestCase):
         )
 
         self.assertIn(
-            b"Insurance Claim System",
+            b"Insurance Claim System - V1",
             response.data
         )
 
@@ -51,9 +39,22 @@ class TestInsuranceApp(unittest.TestCase):
             200
         )
 
+        self.assertEqual(
+            response.json["version"],
+            "1"
+        )
+
     def test_add_claim(self):
 
-        response = self.add_sample_claim()
+        response = self.client.post(
+            "/add",
+            data={
+                "claimant": "Chetna",
+                "policy_number": "POL123",
+                "amount": "5000",
+                "description": "Vehicle damage"
+            }
+        )
 
         self.assertEqual(
             response.status_code,
@@ -66,60 +67,24 @@ class TestInsuranceApp(unittest.TestCase):
         )
 
         self.assertEqual(
+            insurance_app.claims[0]["claimant"],
+            "Chetna"
+        )
+
+        self.assertEqual(
             insurance_app.claims[0]["status"],
             "Pending"
         )
 
-    def test_view_claims(self):
-
-        self.add_sample_claim()
-
-        response = self.client.get("/claims")
-
-        self.assertEqual(
-            response.status_code,
-            200
-        )
-
-        self.assertEqual(
-            len(response.json),
-            1
-        )
-
-        self.assertEqual(
-            response.json[0]["claimant"],
-            "Chetna"
-        )
-
-    def test_update_claim_status(self):
-
-        self.add_sample_claim()
+    def test_invalid_amount(self):
 
         response = self.client.post(
-            "/update/1",
+            "/add",
             data={
-                "status": "Approved"
-            }
-        )
-
-        self.assertEqual(
-            response.status_code,
-            302
-        )
-
-        self.assertEqual(
-            insurance_app.claims[0]["status"],
-            "Approved"
-        )
-
-    def test_invalid_status(self):
-
-        self.add_sample_claim()
-
-        response = self.client.post(
-            "/update/1",
-            data={
-                "status": "Invalid"
+                "claimant": "Chetna",
+                "policy_number": "POL123",
+                "amount": "invalid",
+                "description": "Vehicle damage"
             }
         )
 
@@ -128,18 +93,21 @@ class TestInsuranceApp(unittest.TestCase):
             400
         )
 
-    def test_nonexistent_claim(self):
+    def test_negative_amount(self):
 
         response = self.client.post(
-            "/update/999",
+            "/add",
             data={
-                "status": "Approved"
+                "claimant": "Chetna",
+                "policy_number": "POL123",
+                "amount": "-500",
+                "description": "Vehicle damage"
             }
         )
 
         self.assertEqual(
             response.status_code,
-            404
+            400
         )
 
 

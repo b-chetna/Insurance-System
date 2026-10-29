@@ -1,11 +1,4 @@
-from flask import (
-    Flask,
-    request,
-    jsonify,
-    render_template_string,
-    redirect,
-    url_for
-)
+from flask import Flask, request, jsonify, render_template_string, redirect, url_for
 
 app = Flask(__name__)
 
@@ -18,13 +11,13 @@ HTML = """
 <html>
 <head>
 
-<title>Insurance Claim System</title>
+<title>Insurance Claim System - V1</title>
 
 <style>
 
 body {
     font-family: Arial, sans-serif;
-    max-width: 1100px;
+    max-width: 800px;
     margin: 40px auto;
     padding: 20px;
     background: #f4f6f9;
@@ -34,18 +27,17 @@ h1, h2 {
     color: #173b68;
 }
 
-form, .claims-section {
+form {
     background: white;
-    padding: 20px;
+    padding: 25px;
     border-radius: 10px;
-    margin-bottom: 25px;
 }
 
-input, textarea, button, select {
+input, textarea, button {
     box-sizing: border-box;
     width: 100%;
-    margin: 8px 0;
-    padding: 10px;
+    margin: 10px 0;
+    padding: 12px;
 }
 
 button {
@@ -53,27 +45,6 @@ button {
     color: white;
     border: none;
     cursor: pointer;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-}
-
-th, td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: left;
-}
-
-th {
-    background: #173b68;
-    color: white;
-}
-
-tr:nth-child(even) {
-    background: #f2f2f2;
 }
 
 .success {
@@ -86,13 +57,13 @@ tr:nth-child(even) {
 
 <body>
 
-<h1>Insurance Claim System - V3</h1>
+<h1>Insurance Claim System - V1</h1>
+
+<h2>Add Insurance Claim</h2>
 
 {% if message %}
 <p class="success">{{ message }}</p>
 {% endif %}
-
-<h2>Add Claim</h2>
 
 <form action="/add" method="POST">
 
@@ -135,102 +106,6 @@ Submit Claim
 
 </form>
 
-<h2>View Claims</h2>
-
-<div class="claims-section">
-
-{% if claims %}
-
-<table>
-
-<thead>
-
-<tr>
-    <th>ID</th>
-    <th>Claimant</th>
-    <th>Policy Number</th>
-    <th>Amount</th>
-    <th>Description</th>
-    <th>Status</th>
-    <th>Update Status</th>
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for claim in claims %}
-
-<tr>
-
-<td>{{ claim.id }}</td>
-
-<td>{{ claim.claimant }}</td>
-
-<td>{{ claim.policy_number }}</td>
-
-<td>{{ "%.2f"|format(claim.amount) }}</td>
-
-<td>{{ claim.description }}</td>
-
-<td>{{ claim.status }}</td>
-
-<td>
-
-<form
-    action="/update/{{ claim.id }}"
-    method="POST"
->
-
-<select name="status" required>
-
-<option
-    value="Pending"
-    {% if claim.status == "Pending" %}selected{% endif %}
->
-Pending
-</option>
-
-<option
-    value="Approved"
-    {% if claim.status == "Approved" %}selected{% endif %}
->
-Approved
-</option>
-
-<option
-    value="Rejected"
-    {% if claim.status == "Rejected" %}selected{% endif %}
->
-Rejected
-</option>
-
-</select>
-
-<button type="submit">
-Update
-</button>
-
-</form>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-{% else %}
-
-<p>No claims submitted yet.</p>
-
-{% endif %}
-
-</div>
-
 </body>
 </html>
 """
@@ -243,7 +118,6 @@ def home():
 
     return render_template_string(
         HTML,
-        claims=claims,
         message=message
     )
 
@@ -253,7 +127,7 @@ def health():
 
     return jsonify({
         "status": "healthy",
-        "version": "3"
+        "version": "1"
     }), 200
 
 
@@ -279,12 +153,15 @@ def add_claim():
     ).strip()
 
     if not claimant:
+
         return "Claimant name is required", 400
 
     if not policy_number:
+
         return "Policy number is required", 400
 
     if not description:
+
         return "Description is required", 400
 
     try:
@@ -325,48 +202,6 @@ def add_claim():
             message="Claim submitted successfully!"
         )
     )
-
-
-@app.route("/claims")
-def view_claims():
-
-    return jsonify(claims), 200
-
-
-@app.route(
-    "/update/<int:claim_id>",
-    methods=["POST"]
-)
-def update_claim(claim_id):
-
-    new_status = request.form.get(
-        "status", ""
-    )
-
-    allowed_statuses = {
-        "Pending",
-        "Approved",
-        "Rejected"
-    }
-
-    if new_status not in allowed_statuses:
-
-        return "Invalid claim status", 400
-
-    for claim in claims:
-
-        if claim["id"] == claim_id:
-
-            claim["status"] = new_status
-
-            return redirect(
-                url_for(
-                    "home",
-                    message="Claim status updated successfully!"
-                )
-            )
-
-    return "Claim not found", 404
 
 
 if __name__ == "__main__":
