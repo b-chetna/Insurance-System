@@ -6,7 +6,7 @@ import app as insurance_app
 app = insurance_app.app
 
 
-class TestInsuranceApp(unittest.TestCase):
+class TestInsuranceAppV2(unittest.TestCase):
 
     def setUp(self):
 
@@ -38,7 +38,7 @@ class TestInsuranceApp(unittest.TestCase):
         )
 
         self.assertIn(
-            b"Insurance Claim System",
+            b"Insurance Claim System - V2",
             response.data
         )
 
@@ -49,6 +49,11 @@ class TestInsuranceApp(unittest.TestCase):
         self.assertEqual(
             response.status_code,
             200
+        )
+
+        self.assertEqual(
+            response.json["version"],
+            "2"
         )
 
     def test_add_claim(self):
@@ -91,35 +96,15 @@ class TestInsuranceApp(unittest.TestCase):
             "Chetna"
         )
 
-    def test_update_claim_status(self):
-
-        self.add_sample_claim()
+    def test_invalid_amount(self):
 
         response = self.client.post(
-            "/update/1",
+            "/add",
             data={
-                "status": "Approved"
-            }
-        )
-
-        self.assertEqual(
-            response.status_code,
-            302
-        )
-
-        self.assertEqual(
-            insurance_app.claims[0]["status"],
-            "Approved"
-        )
-
-    def test_invalid_status(self):
-
-        self.add_sample_claim()
-
-        response = self.client.post(
-            "/update/1",
-            data={
-                "status": "Invalid"
+                "claimant": "Chetna",
+                "policy_number": "POL123",
+                "amount": "invalid",
+                "description": "Vehicle damage"
             }
         )
 
@@ -128,18 +113,21 @@ class TestInsuranceApp(unittest.TestCase):
             400
         )
 
-    def test_nonexistent_claim(self):
+    def test_negative_amount(self):
 
         response = self.client.post(
-            "/update/999",
+            "/add",
             data={
-                "status": "Approved"
+                "claimant": "Chetna",
+                "policy_number": "POL123",
+                "amount": "-500",
+                "description": "Vehicle damage"
             }
         )
 
         self.assertEqual(
             response.status_code,
-            404
+            400
         )
 
 

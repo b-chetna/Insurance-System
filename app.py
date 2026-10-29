@@ -1,11 +1,4 @@
-from flask import (
-    Flask,
-    request,
-    jsonify,
-    render_template_string,
-    redirect,
-    url_for
-)
+from flask import Flask, request, jsonify, render_template_string, redirect, url_for
 
 app = Flask(__name__)
 
@@ -18,7 +11,7 @@ HTML = """
 <html>
 <head>
 
-<title>Insurance Claim System</title>
+<title>Insurance Claim System - V2</title>
 
 <style>
 
@@ -41,7 +34,7 @@ form, .claims-section {
     margin-bottom: 25px;
 }
 
-input, textarea, button, select {
+input, textarea, button {
     box-sizing: border-box;
     width: 100%;
     margin: 8px 0;
@@ -86,13 +79,13 @@ tr:nth-child(even) {
 
 <body>
 
-<h1>Insurance Claim System - V3</h1>
+<h1>Insurance Claim System - V2</h1>
+
+<h2>Add Insurance Claim</h2>
 
 {% if message %}
 <p class="success">{{ message }}</p>
 {% endif %}
-
-<h2>Add Claim</h2>
 
 <form action="/add" method="POST">
 
@@ -135,9 +128,9 @@ Submit Claim
 
 </form>
 
-<h2>View Claims</h2>
-
 <div class="claims-section">
+
+<h2>View Insurance Claims</h2>
 
 {% if claims %}
 
@@ -152,7 +145,6 @@ Submit Claim
     <th>Amount</th>
     <th>Description</th>
     <th>Status</th>
-    <th>Update Status</th>
 </tr>
 
 </thead>
@@ -174,46 +166,6 @@ Submit Claim
 <td>{{ claim.description }}</td>
 
 <td>{{ claim.status }}</td>
-
-<td>
-
-<form
-    action="/update/{{ claim.id }}"
-    method="POST"
->
-
-<select name="status" required>
-
-<option
-    value="Pending"
-    {% if claim.status == "Pending" %}selected{% endif %}
->
-Pending
-</option>
-
-<option
-    value="Approved"
-    {% if claim.status == "Approved" %}selected{% endif %}
->
-Approved
-</option>
-
-<option
-    value="Rejected"
-    {% if claim.status == "Rejected" %}selected{% endif %}
->
-Rejected
-</option>
-
-</select>
-
-<button type="submit">
-Update
-</button>
-
-</form>
-
-</td>
 
 </tr>
 
@@ -253,7 +205,7 @@ def health():
 
     return jsonify({
         "status": "healthy",
-        "version": "3"
+        "version": "2"
     }), 200
 
 
@@ -279,12 +231,15 @@ def add_claim():
     ).strip()
 
     if not claimant:
+
         return "Claimant name is required", 400
 
     if not policy_number:
+
         return "Policy number is required", 400
 
     if not description:
+
         return "Description is required", 400
 
     try:
@@ -333,42 +288,6 @@ def view_claims():
     return jsonify(claims), 200
 
 
-@app.route(
-    "/update/<int:claim_id>",
-    methods=["POST"]
-)
-def update_claim(claim_id):
-
-    new_status = request.form.get(
-        "status", ""
-    )
-
-    allowed_statuses = {
-        "Pending",
-        "Approved",
-        "Rejected"
-    }
-
-    if new_status not in allowed_statuses:
-
-        return "Invalid claim status", 400
-
-    for claim in claims:
-
-        if claim["id"] == claim_id:
-
-            claim["status"] = new_status
-
-            return redirect(
-                url_for(
-                    "home",
-                    message="Claim status updated successfully!"
-                )
-            )
-
-    return "Claim not found", 404
-
-
 if __name__ == "__main__":
 
     app.run(
@@ -376,3 +295,4 @@ if __name__ == "__main__":
         port=5000,
         debug=False
     )
+
